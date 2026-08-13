@@ -1,87 +1,27 @@
-# 🛒 React Shop (Auth + Qlobal State)
+# React Shop
 
-Mock autentifikasiya, qorunan marşrutlar, qlobal state idarəetməsi (Context API + useReducer), form validasiyası və optimistic UI ilə CRUD əməliyyatları olan e-ticarət səbəti tətbiqi.
+Bu, universitet təcrübəsi çərçivəsində hazırladığım tapşırıqdır. Login sistemi, qorunan səhifələr, səbət kimi hissələri olan kiçik bir e-ticarət tətbiqidir.
 
-## 📦 İstifadə olunan texnologiyalar
+## Nə edir
 
-- **React 18** (function components + hooks)
-- **React Router** — naviqasiya və qorunan marşrutlar
-- **Context API + useReducer** — auth və səbət üçün qlobal state
-- **json-server** — mock REST API
-- **Vite** — build tool / dev server
+Giriş edib çıxış etmək olur, sabit bir test istifadəçisi ilə (real qeydiyyat yoxdur). Login olmadan səbət səhifəsinə girmək mümkün deyil, avtomatik login səhifəsinə atır. Səhifəni yeniləyəndə də giriş yadda qalır, çünki məlumat localStorage-da saxlanılır. Məhsulları səbətə əlavə etmək, silmək və sayını dəyişmək olur, bu zaman UI dərhal yenilənir, serverin cavabını gözləmədən. Formada sadə validasiya var, email formatı və şifrə uzunluğu yoxlanılır. Bir yerdə xəta baş versə, bütün sayt yox, elə həmin hissə "sınır", qalan hissə işləməyə davam edir.
 
-## 🚀 Quraşdırma və işə salma
+## Texnologiyalar
 
-1. Repozitoriyanı klonlayın:
-```bash
-git clone https://github.com/gulergulmemmedli/react-shop-auth.git
-cd react-shop-auth
-```
+React və Vite ilə qurulub, naviqasiya üçün React Router istifadə olunub. Qlobal state Context API və useReducer ilə idarə olunur, Redux işlədilməyib. Backend əvəzinə json-server istifadə olunub.
 
-2. Asılılıqları yükləyin:
-```bash
-npm install
-```
+## Necə işə salmaq
 
-3. Mock API-ni işə salın (ayrıca terminalda):
-```bash
-npm run server
-```
-Bu, `http://localhost:4000` ünvanında `/products` və `/cart` endpoint-lərini açır.
+Əvvəlcə `npm install` ilə paketləri yüklə. Sonra iki ayrı terminalda `npm run server` (saxta API-ni port 4000-də açır) və `npm run dev` (tətbiqin özünü, adətən port 5173-də) işə sal. Login üçün email olaraq test@shop.com, şifrə olaraq isə parol123 istifadə et.
 
-4. Dev server-i işə salın (başqa bir terminalda):
-```bash
-npm run dev
-```
-Brauzerdə `http://localhost:5173` açın.
+## Struktur
 
-## 🔑 Test istifadəçisi
+src/features qovluğu içində auth və cart bir-birindən ayrı saxlanılıb, hər birinin öz context-i, reducer-i və komponentləri var. src/api içində fetch sorğuları, src/components içində isə navbar və error boundary kimi ortaq komponentlər yerləşir.
 
-Bu tətbiqdə real qeydiyyat yoxdur (mock autentifikasiyadır). Giriş üçün:
+## Demo
 
-- Email: `test@shop.com`
-- Şifrə: `parol123`
+Frontend bu linkdə: https://react-shop-auth-idmtvtkj7-glr5.vercel.app. Backend Render-in pulsuz planında olduğu üçün, bir müddət istifadə olunmasa "yatır", ilk açılışda bir az gecikmə ola bilər.
 
-## 📁 Layihə strukturu
+## Qeyd
 
-```
-src/
-├── api/
-│   ├── client.js       # Mərkəzi fetch wrapper, 401/token expiry idarəsi
-│   ├── products.js
-│   └── cart.js
-├── features/
-│   ├── auth/
-│   │   ├── AuthContext.jsx    # Auth qlobal state (useReducer)
-│   │   ├── authReducer.js
-│   │   ├── LoginPage.jsx
-│   │   └── ProtectedRoute.jsx
-│   └── cart/
-│       ├── CartContext.jsx    # Səbət qlobal state (useReducer)
-│       ├── cartReducer.js
-│       ├── ProductList.jsx
-│       ├── ProductCard.jsx
-│       └── CartPage.jsx
-├── components/
-│   ├── Navbar.jsx
-│   └── ErrorBoundary.jsx
-├── pages/
-│   ├── HomePage.jsx
-│   └── NotFoundPage.jsx
-└── App.jsx
-```
-
-## ✨ Əsas funksionallıq
-
-- **Qorunan marşrutlar:** `/cart` yalnız giriş etmiş istifadəçilər üçün açıqdır; `ProtectedRoute` login olmayanı `/login`-ə yönləndirir (`replace` ilə, "geri" düyməsi ilə qorunan səhifəyə qayıtmaq mümkün olmasın deyə).
-- **Sessiya bərpası:** Token `localStorage`-da saxlanılır; səhifə yenilənəndə `AuthContext` sessiyanı avtomatik bərpa edir.
-- **Token expiration:** Token ömrü test məqsədilə qəsdən qısa saxlanılıb (2 dəqiqə). Vaxtı bitmiş token aşkarlanan kimi (növbəti API sorğusunda və ya sessiya bərpasında) istifadəçi avtomatik logout olunur və login-ə yönləndirilir.
-- **Logout təmizliyi:** Çıxış zamanı həm `localStorage`, həm də tətbiq daxili state tam sıfırlanır.
-- **Optimistic UI:** Səbətə məhsul əlavə etmə/silmə/miqdar dəyişmə UI-da dərhal əks olunur, server sorğusu arxa planda gedir. Sorğu uğursuz olarsa, əvvəlki vəziyyətə geri qaytarılır (rollback).
-- **Stale closure nümunəsi:** `CartPage`-də `useEffect`-in dependency array-i qəsdən nümayiş üçün izah olunub — asılılıq əskik olduqda funksiyanın köhnə state-i "yaddaşda saxlaması" probleminə düzgün həll göstərilib.
-- **Error Boundary:** Class komponent kimi yazılıb; bir hissədə xəta baş versə, bütün tətbiq çökmür.
-
-## 🔧 Bilinən məhdudiyyətlər
-
-- Qeydiyyat (register) funksiyası yoxdur, yalnız əvvəlcədən müəyyən edilmiş test istifadəçisi mövcuddur.
-- `json-server` real backend deyil, yalnız inkişaf/test məqsədi daşıyır.
+Səbətdəki miqdarı 1-dən aşağı endirəndə (yəni "-" basanda) məhsul avtomatik silinir. Register/qeydiyyat yoxdur, tapşırıqda tələb olunmurdu.

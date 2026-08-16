@@ -11,8 +11,6 @@ export function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // İstifadəçi login səhifəsinə qorunan bir səhifədən yönləndirilibsə,
-  // uğurlu login-dən sonra elə oraya qaytarırıq. Əks halda ana səhifəyə.
   const from = location.state?.from?.pathname || '/'
 
   function validate() {
@@ -32,6 +30,21 @@ export function LoginPage() {
 
     setValidationErrors(errors)
     return Object.keys(errors).length === 0
+  }
+
+  function handleEmailChange(e) {
+    setEmail(e.target.value)
+    // İstifadəçi yazmağa başlayan kimi, həmin sahənin köhnə xətasını təmizləyirik
+    if (validationErrors.email) {
+      setValidationErrors((prev) => ({ ...prev, email: undefined }))
+    }
+  }
+
+  function handlePasswordChange(e) {
+    setPassword(e.target.value)
+    if (validationErrors.password) {
+      setValidationErrors((prev) => ({ ...prev, password: undefined }))
+    }
   }
 
   async function handleSubmit(e) {
@@ -56,7 +69,7 @@ export function LoginPage() {
             id="email"
             type="text"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleEmailChange}
           />
           {validationErrors.email && (
             <span className="field-error">{validationErrors.email}</span>
@@ -69,7 +82,7 @@ export function LoginPage() {
             id="password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
           />
           {validationErrors.password && (
             <span className="field-error">{validationErrors.password}</span>

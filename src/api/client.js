@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:4000'
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
 // Bu funksiyanı auth sistemi ilə "bağlamaq" üçün istifadə edirik -
 // AuthContext özünü burda qeydiyyatdan keçirir ki, client.js

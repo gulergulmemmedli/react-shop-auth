@@ -7,7 +7,6 @@ const CartContext = createContext(null)
 export function CartProvider({ children }) {
   const [state, dispatch] = useReducer(cartReducer, initialCartState)
 
-  // Tətbiq açılanda səbəti serverdən çəkirik
   useEffect(() => {
     dispatch({ type: 'LOADING' })
     fetchCart()
@@ -15,12 +14,27 @@ export function CartProvider({ children }) {
       .catch(() => dispatch({ type: 'ERROR', payload: 'Səbət yüklənə bilmədi' }))
   }, [])
 
-  // Optimistic add: UI-ı DƏRHAL yeniləyirik, server sorğusu arxa planda gedir
   const addItem = useCallback(async (product) => {
-    const snapshot = state.items // rollback üçün cari vəziyyəti yadda saxlayırıq
+    const snapshot = state.items
+    const existing = state.items.find((item) => item.productId === product.id)
 
+    if (existing) {
+      // Məhsul artıq səbətdədir - yeni sətir yaratmaq əvəzinə
+      // mövcud sətrin miqdarını PATCH ilə artırırıq
+      const newQuantity = existing.quantity + 1
+      dispatch({ type: 'UPDATE_QUANTITY_OPTIMISTIC', payload: { id: existing.id, quantity: newQuantity } })
+
+      try {
+        await updateCartItemQuantity(existing.id, newQuantity)
+      } catch {
+        dispatch({ type: 'ROLLBACK', payload: snapshot })
+      }
+      return
+    }
+
+    // Məhsul səbətdə yoxdur - yeni sətir yaradırıq (POST)
     const optimisticItem = {
-      id: `temp-${Date.now()}`, // server hələ real id verməyib
+      id: `temp-${Date.now()}`,
       productId: product.id,
       name: product.name,
       price: product.price,
@@ -32,7 +46,6 @@ export function CartProvider({ children }) {
 
     try {
       const saved = await addCartItem(optimisticItem)
-      // Server-in verdiyi əsl id ilə əvəz edirik
       dispatch({ type: 'SET_CART', payload: [...snapshot.filter(i => i.productId !== product.id), saved] })
     } catch {
       dispatch({ type: 'ROLLBACK', payload: snapshot })

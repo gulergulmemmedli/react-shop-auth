@@ -55,6 +55,29 @@ export function AuthProvider({ children }) {
     })
   }, [])
 
+  // Token-in vaxtı bitəndə, istifadəçi heç bir hərəkət etməsə belə,
+  // avtomatik logout etmək üçün bir "timer" qururuq.
+  useEffect(() => {
+    if (!state.token || !state.user) return
+
+    const session = loadSession()
+    if (!session?.expiresAt) return
+
+    const msLeft = session.expiresAt - Date.now()
+    if (msLeft <= 0) {
+      clearSession()
+      dispatch({ type: 'LOGOUT' })
+      return
+    }
+
+    const timer = setTimeout(() => {
+      clearSession()
+      dispatch({ type: 'LOGOUT' })
+    }, msLeft)
+
+    return () => clearTimeout(timer)
+  }, [state.token, state.user])
+
   const login = useCallback(async (email, password) => {
     dispatch({ type: 'LOGIN_START' })
 
